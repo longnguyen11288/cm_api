@@ -942,7 +942,7 @@ def post_startup(cluster, hdfs_service, oozie_service):
 
 ### Main function ###
 def main():
-   API = ApiResource(CM_HOST, version=5, username=ADMIN_USER, password=ADMIN_PASS)
+   API = ApiResource(CM_HOST, version=6, username=ADMIN_USER, password=ADMIN_PASS)
    MANAGER = API.get_cloudera_manager()
    MANAGER.update_config(CM_CONFIG)
    print "Connected to CM host on " + CM_HOST + " and updated CM configuration"
