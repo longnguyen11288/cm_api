@@ -108,7 +108,7 @@ PARCELS = [
 
 ### Management Services ###
 # If using the embedded postgresql database, the database passwords can be found in /etc/cloudera-scm-server/db.mgmt.properties.
-# The values change every time the cloudera-scm-server-db process is restarted. 
+# The values change every time the cloudera-scm-server-db process is restarted.
 # TBD will CM have to be reconfigured each time?
 MGMT_SERVICENAME = "MGMT"
 MGMT_SERVICE_CONFIG = {
@@ -159,7 +159,7 @@ RMAN_ROLE_CONFIG = {
 }
 
 ### ZooKeeper ###
-# ZK quorum will be the first three hosts 
+# ZK quorum will be the first three hosts
 ZOOKEEPER_HOSTS = list(CLUSTER_HOSTS[:3])
 ZOOKEEPER_SERVICE_NAME = "ZOOKEEPER"
 ZOOKEEPER_SERVICE_CONFIG = {
@@ -194,7 +194,7 @@ HDFS_SECONDARY_NAMENODE_CONFIG = {
 }
 HDFS_DATANODE_HOSTS = list(CLUSTER_HOSTS)
 #dfs_datanode_du_reserved must be smaller than the amount of free space across the data dirs
-#Ideally each data directory will have at least 1TB capacity; they need at least 100GB at a minimum 
+#Ideally each data directory will have at least 1TB capacity; they need at least 100GB at a minimum
 #dfs_datanode_failed_volumes_tolerated must be less than the number of different data dirs (ie volumes) in dfs_data_dir_list
 HDFS_DATANODE_CONFIG = {
   #'dfs_data_dir_list': '/data01/hadoop/datanode,/data02/hadoop/datanode,/data03/hadoop/datanode,/data04/hadoop/datanode,/data05/hadoop/datanode,/data06/hadoop/datanode,/data07/hadoop/datanode,/data08/hadoop/datanode',
@@ -370,7 +370,7 @@ OOZIE_SERVICE_CONFIG = {
   'mapreduce_yarn_service': YARN_SERVICE_NAME,
 }
 OOZIE_SERVER_HOST = CLUSTER_HOSTS[0]
-OOZIE_SERVER_CONFIG = { 
+OOZIE_SERVER_CONFIG = {
    'oozie_java_heapsize': 207881018,
    'oozie_database_host': CM_HOST,
    'oozie_database_name': 'oozie',
@@ -385,7 +385,7 @@ SQOOP_SERVICE_CONFIG = {
   'mapreduce_yarn_service': YARN_SERVICE_NAME,
 }
 SQOOP_SERVER_HOST = CLUSTER_HOSTS[0]
-SQOOP_SERVER_CONFIG = { 
+SQOOP_SERVER_CONFIG = {
    'sqoop_java_heapsize': 207881018,
 }
 
@@ -401,7 +401,7 @@ HUE_SERVICE_CONFIG = {
   'hue_hbase_thrift': HBASE_SERVICE_NAME + "-" + HBASE_THRIFTSERVER_SERVICE_NAME,
 }
 HUE_SERVER_HOST = CLUSTER_HOSTS[0]
-HUE_SERVER_CONFIG = { 
+HUE_SERVER_CONFIG = {
    'hue_server_hue_safety_valve': '[search]\r\n## URL of the Solr Server\r\nsolr_url=http://' + SEARCH_SOLR_HOST + ':8983/solr',
 }
 HUE_KTR_HOST = CLUSTER_HOSTS[0]
@@ -434,7 +434,7 @@ ACCUMULO_GC_CONFIG = { }
 
 # Creates the cluster and adds hosts
 def init_cluster(api, cluster_name, cdh_version, hosts, cm_host):
-   cluster = api.create_cluster(cluster_name, cdh_version)
+   cluster = api.create_cluster(cluster_name, cdh_version, "5.3.2")
    # Add the CM host to the list of hosts to add in the cluster so it can run the management services
    all_hosts = list(CLUSTER_HOSTS)
    all_hosts.append(CM_HOST)
@@ -471,7 +471,7 @@ def deploy_parcels(cluster, parcels):
 # This function also starts the services.
 def deploy_management(manager, mgmt_servicename, mgmt_service_conf, mgmt_role_conf, amon_role_name, amon_role_conf, apub_role_name, apub_role_conf, eserv_role_name, eserv_role_conf, hmon_role_name, hmon_role_conf, smon_role_name, smon_role_conf, nav_role_name, nav_role_conf, navms_role_name, navms_role_conf, rman_role_name, rman_role_conf):
    mgmt = manager.create_mgmt_service(ApiServiceSetupInfo())
-   
+
    # create roles. Note that host id may be different from host name (especially in CM 5). Look it it up in /api/v5/hosts
    mgmt.create_role(amon_role_name + "-1", "ACTIVITYMONITOR", CM_HOST)
    mgmt.create_role(apub_role_name + "-1", "ALERTPUBLISHER", CM_HOST)
@@ -481,8 +481,8 @@ def deploy_management(manager, mgmt_servicename, mgmt_service_conf, mgmt_role_co
    #mgmt.create_role(nav_role_name + "-1", "NAVIGATOR", CM_HOST)
    #mgmt.create_role(navms_role_name + "-1", "NAVIGATORMETADATASERVER", CM_HOST)
    #mgmt.create_role(rman_role_name + "-1", "REPORTSMANAGER", CM_HOST)
-   
-   # now configure each role   
+
+   # now configure each role
    for group in mgmt.get_all_role_config_groups():
        if group.roleType == "ACTIVITYMONITOR":
            group.update_config(amon_role_conf)
@@ -500,10 +500,10 @@ def deploy_management(manager, mgmt_servicename, mgmt_service_conf, mgmt_role_co
     #       group.update_config(navms_role_conf)
     #   elif group.roleType == "REPORTSMANAGER":
     #       group.update_config(rman_role_conf)
-   
+
    # now start the management service
    mgmt.start().wait()
-   
+
    return mgmt
 
 
@@ -511,16 +511,16 @@ def deploy_management(manager, mgmt_servicename, mgmt_service_conf, mgmt_role_co
 def deploy_zookeeper(cluster, zk_name, zk_hosts, zk_service_conf, zk_role_conf):
    zk = cluster.create_service(zk_name, "ZOOKEEPER")
    zk.update_config(zk_service_conf)
-   
+
    zk_id = 0
    for zk_host in zk_hosts:
       zk_id += 1
       zk_role_conf['serverId'] = zk_id
       role = zk.create_role(zk_name + "-" + str(zk_id), "SERVER", zk_host)
       role.update_config(zk_role_conf)
-   
+
    zk.init_zookeeper()
-   
+
    return zk
 
 
@@ -529,32 +529,32 @@ def deploy_zookeeper(cluster, zk_name, zk_hosts, zk_service_conf, zk_role_conf):
 def deploy_hdfs(cluster, hdfs_service_name, hdfs_config, hdfs_nn_service_name, hdfs_nn_host, hdfs_nn_config, hdfs_snn_host, hdfs_snn_config, hdfs_dn_hosts, hdfs_dn_config, hdfs_gw_hosts, hdfs_gw_config):
    hdfs_service = cluster.create_service(hdfs_service_name, "HDFS")
    hdfs_service.update_config(hdfs_config)
-   
+
    nn_role_group = hdfs_service.get_role_config_group("{0}-NAMENODE-BASE".format(hdfs_service_name))
    nn_role_group.update_config(hdfs_nn_config)
    nn_service_pattern = "{0}-" + hdfs_nn_service_name
    hdfs_service.create_role(nn_service_pattern.format(hdfs_service_name), "NAMENODE", hdfs_nn_host)
-   
+
    snn_role_group = hdfs_service.get_role_config_group("{0}-SECONDARYNAMENODE-BASE".format(hdfs_service_name))
    snn_role_group.update_config(hdfs_snn_config)
    hdfs_service.create_role("{0}-snn".format(hdfs_service_name), "SECONDARYNAMENODE", hdfs_snn_host)
-   
+
    dn_role_group = hdfs_service.get_role_config_group("{0}-DATANODE-BASE".format(hdfs_service_name))
    dn_role_group.update_config(hdfs_dn_config)
-   
+
    gw_role_group = hdfs_service.get_role_config_group("{0}-GATEWAY-BASE".format(hdfs_service_name))
    gw_role_group.update_config(hdfs_gw_config)
-   
+
    datanode = 0
    for host in hdfs_dn_hosts:
       datanode += 1
       hdfs_service.create_role("{0}-dn-".format(hdfs_service_name) + str(datanode), "DATANODE", host)
-   
+
    gateway = 0
    for host in hdfs_gw_hosts:
       gateway += 1
       hdfs_service.create_role("{0}-gw-".format(hdfs_service_name) + str(gateway), "GATEWAY", host)
-   
+
    return hdfs_service
 
 
@@ -562,7 +562,7 @@ def deploy_hdfs(cluster, hdfs_service_name, hdfs_config, hdfs_nn_service_name, h
 def init_hdfs(hdfs_service, hdfs_name, timeout):
    cmd = hdfs_service.format_hdfs("{0}-nn".format(hdfs_name))[0]
    if not cmd.wait(timeout).success:
-      print "WARNING: Failed to format HDFS, attempting to continue with the setup" 
+      print "WARNING: Failed to format HDFS, attempting to continue with the setup"
 
 
 # Deploys MapReduce - JT, TTs, gateways.
@@ -571,27 +571,27 @@ def init_hdfs(hdfs_service, hdfs_name, timeout):
 def deploy_mapreduce(cluster, mapred_service_name, mapred_service_config, mapred_jt_host, mapred_jt_config, mapred_tt_hosts, mapred_tt_config, mapred_gw_hosts, mapred_gw_config ):
    mapred_service = cluster.create_service(mapred_service_name, "MAPREDUCE")
    mapred_service.update_config(mapred_service_config)
-      
+
    jt = mapred_service.get_role_config_group("{0}-JOBTRACKER-BASE".format(mapred_service_name))
    jt.update_config(mapred_jt_config)
    mapred_service.create_role("{0}-jt".format(mapred_service_name), "JOBTRACKER", mapred_jt_host)
-   
+
    tt = mapred_service.get_role_config_group("{0}-TASKTRACKER-BASE".format(mapred_service_name))
    tt.update_config(mapred_tt_config)
-   
+
    gw = mapred_service.get_role_config_group("{0}-GATEWAY-BASE".format(mapred_service_name))
    gw.update_config(mapred_gw_config)
-   
+
    tasktracker = 0
    for host in mapred_tt_hosts:
       tasktracker += 1
       mapred_service.create_role("{0}-tt-".format(mapred_service_name) + str(tasktracker), "TASKTRACKER", host)
-   
+
    gateway = 0
    for host in mapred_gw_hosts:
       gateway += 1
       mapred_service.create_role("{0}-gw-".format(mapred_service_name) + str(gateway), "GATEWAY", host)
-   
+
    return mapred_service
 
 
@@ -600,35 +600,35 @@ def deploy_mapreduce(cluster, mapred_service_name, mapred_service_config, mapred
 def deploy_yarn(cluster, yarn_service_name, yarn_service_config, yarn_rm_host, yarn_rm_config, yarn_jhs_host, yarn_jhs_config, yarn_nm_hosts, yarn_nm_config, yarn_gw_hosts, yarn_gw_config):
    yarn_service = cluster.create_service(yarn_service_name, "YARN")
    yarn_service.update_config(yarn_service_config)
-      
+
    rm = yarn_service.get_role_config_group("{0}-RESOURCEMANAGER-BASE".format(yarn_service_name))
    rm.update_config(yarn_rm_config)
    yarn_service.create_role("{0}-rm".format(yarn_service_name), "RESOURCEMANAGER", yarn_rm_host)
-      
+
    jhs = yarn_service.get_role_config_group("{0}-JOBHISTORY-BASE".format(yarn_service_name))
    jhs.update_config(yarn_jhs_config)
    yarn_service.create_role("{0}-jhs".format(yarn_service_name), "JOBHISTORY", yarn_jhs_host)
-   
+
    nm = yarn_service.get_role_config_group("{0}-NODEMANAGER-BASE".format(yarn_service_name))
    nm.update_config(yarn_nm_config)
-   
+
    nodemanager = 0
    for host in yarn_nm_hosts:
       nodemanager += 1
       yarn_service.create_role("{0}-nm-".format(yarn_service_name) + str(nodemanager), "NODEMANAGER", host)
-   
+
    gw = yarn_service.get_role_config_group("{0}-GATEWAY-BASE".format(yarn_service_name))
    gw.update_config(yarn_gw_config)
-   
+
    gateway = 0
    for host in yarn_gw_hosts:
       gateway += 1
       yarn_service.create_role("{0}-gw-".format(yarn_service_name) + str(gateway), "GATEWAY", host)
-   
+
    #TODO need api version 6 for these, but I think they are done automatically?
    #yarn_service.create_yarn_job_history_dir()
    #yarn_service.create_yarn_node_manager_remote_app_log_dir()
-   
+
    return yarn_service
 
 
@@ -636,29 +636,29 @@ def deploy_yarn(cluster, yarn_service_name, yarn_service_config, yarn_rm_host, y
 def deploy_spark(cluster, spark_service_name, spark_service_config, spark_master_host, spark_master_config, spark_worker_hosts, spark_worker_config, spark_gw_hosts, spark_gw_config):
    spark_service = cluster.create_service(spark_service_name, "SPARK")
    spark_service.update_config(spark_service_config)
-      
+
    sm = spark_service.get_role_config_group("{0}-SPARK_MASTER-BASE".format(spark_service_name))
    sm.update_config(spark_master_config)
    spark_service.create_role("{0}-sm".format(spark_service_name), "SPARK_MASTER", spark_master_host)
-   
+
    sw = spark_service.get_role_config_group("{0}-SPARK_WORKER-BASE".format(spark_service_name))
    sw.update_config(spark_worker_config)
-   
+
    worker = 0
    for host in spark_worker_hosts:
       worker += 1
       spark_service.create_role("{0}-sw-".format(spark_service_name) + str(worker), "SPARK_WORKER", host)
-   
+
    gw = spark_service.get_role_config_group("{0}-GATEWAY-BASE".format(spark_service_name))
    gw.update_config(spark_gw_config)
-   
+
    gateway = 0
    for host in spark_gw_hosts:
       gateway += 1
       spark_service.create_role("{0}-gw-".format(spark_service_name) + str(gateway), "GATEWAY", host)
-   
+
    #TODO - CreateSparkUserDirCommand, SparkUploadJarServiceCommand???
-   
+
    return spark_service
 
 
@@ -666,34 +666,34 @@ def deploy_spark(cluster, spark_service_name, spark_service_config, spark_master
 def deploy_hbase(cluster, hbase_service_name, hbase_service_config, hbase_hm_host, hbase_hm_config, hbase_rs_hosts, hbase_rs_config, hbase_thriftserver_service_name, hbase_thriftserver_host, hbase_thriftserver_config, hbase_gw_hosts, hbase_gw_config ):
    hbase_service = cluster.create_service(hbase_service_name, "HBASE")
    hbase_service.update_config(hbase_service_config)
-      
+
    hm = hbase_service.get_role_config_group("{0}-MASTER-BASE".format(hbase_service_name))
    hm.update_config(hbase_hm_config)
    hbase_service.create_role("{0}-hm".format(hbase_service_name), "MASTER", hbase_hm_host)
-   
+
    rs = hbase_service.get_role_config_group("{0}-REGIONSERVER-BASE".format(hbase_service_name))
    rs.update_config(hbase_rs_config)
-   
+
    ts = hbase_service.get_role_config_group("{0}-HBASETHRIFTSERVER-BASE".format(hbase_service_name))
    ts.update_config(hbase_thriftserver_config)
    ts_name_pattern = "{0}-" + hbase_thriftserver_service_name
    hbase_service.create_role(ts_name_pattern.format(hbase_service_name), "HBASETHRIFTSERVER", hbase_thriftserver_host)
-   
+
    gw = hbase_service.get_role_config_group("{0}-GATEWAY-BASE".format(hbase_service_name))
    gw.update_config(hbase_gw_config)
-   
+
    regionserver = 0
    for host in hbase_rs_hosts:
       regionserver += 1
       hbase_service.create_role("{0}-rs-".format(hbase_service_name) + str(regionserver), "REGIONSERVER", host)
-   
+
    gateway = 0
    for host in hbase_gw_hosts:
       gateway += 1
       hbase_service.create_role("{0}-gw-".format(hbase_service_name) + str(gateway), "GATEWAY", host)
-   
+
    hbase_service.create_hbase_root()
-   
+
    return hbase_service
 
 
@@ -701,27 +701,27 @@ def deploy_hbase(cluster, hbase_service_name, hbase_service_config, hbase_hm_hos
 def deploy_hive(cluster, hive_service_name, hive_service_config, hive_hms_host, hive_hms_config, hive_hs2_host, hive_hs2_config, hive_whc_host, hive_whc_config, hive_gw_hosts, hive_gw_config):
    hive_service = cluster.create_service(hive_service_name, "HIVE")
    hive_service.update_config(hive_service_config)
-   
+
    hms = hive_service.get_role_config_group("{0}-HIVEMETASTORE-BASE".format(hive_service_name))
    hms.update_config(hive_hms_config)
    hive_service.create_role("{0}-hms".format(hive_service_name), "HIVEMETASTORE", hive_hms_host)
-   
+
    hs2 = hive_service.get_role_config_group("{0}-HIVESERVER2-BASE".format(hive_service_name))
    hs2.update_config(hive_hs2_config)
    hive_service.create_role("{0}-hs2".format(hive_service_name), "HIVESERVER2", hive_hs2_host)
-   
+
    whc = hive_service.get_role_config_group("{0}-WEBHCAT-BASE".format(hive_service_name))
    whc.update_config(hive_whc_config)
    hive_service.create_role("{0}-whc".format(hive_service_name), "WEBHCAT", hive_whc_host)
-   
+
    gw = hive_service.get_role_config_group("{0}-GATEWAY-BASE".format(hive_service_name))
    gw.update_config(hive_gw_config)
-   
+
    gateway = 0
    for host in hive_gw_hosts:
       gateway += 1
       hive_service.create_role("{0}-gw-".format(hive_service_name) + str(gateway), "GATEWAY", host)
-   
+
    return hive_service
 
 
@@ -738,18 +738,18 @@ def init_hive(hive_service):
 def deploy_impala(cluster, impala_service_name, impala_service_config, impala_ss_host, impala_ss_config, impala_cs_host, impala_cs_config, impala_id_hosts, impala_id_config):
    impala_service = cluster.create_service(impala_service_name, "IMPALA")
    impala_service.update_config(impala_service_config)
-   
+
    ss = impala_service.get_role_config_group("{0}-STATESTORE-BASE".format(impala_service_name))
    ss.update_config(impala_ss_config)
    impala_service.create_role("{0}-ss".format(impala_service_name), "STATESTORE", impala_ss_host)
-   
+
    cs = impala_service.get_role_config_group("{0}-CATALOGSERVER-BASE".format(impala_service_name))
    cs.update_config(impala_cs_config)
    impala_service.create_role("{0}-cs".format(impala_service_name), "CATALOGSERVER", impala_cs_host)
-   
+
    id = impala_service.get_role_config_group("{0}-IMPALAD-BASE".format(impala_service_name))
    id.update_config(impala_id_config)
-   
+
    impalad = 0
    for host in impala_id_hosts:
       impalad += 1
@@ -759,32 +759,32 @@ def deploy_impala(cluster, impala_service_name, impala_service_config, impala_ss
    #impala_service.create_impala_catalog_database()
    #impala_service.create_impala_catalog_database_tables()
    #impala_service.create_impala_user_dir()
-   
+
    return impala_service
-   
+
 
 # Deploys Search - solr server, gateways
 def deploy_search(cluster, search_service_name, search_service_config, search_solr_host, search_solr_config, search_gw_hosts, search_gw_config):
    search_service = cluster.create_service(search_service_name, "SOLR")
    search_service.update_config(search_service_config)
-   
+
    solr = search_service.get_role_config_group("{0}-SOLR_SERVER-BASE".format(search_service_name))
    solr.update_config(search_solr_config)
    search_service.create_role("{0}-solr".format(search_service_name), "SOLR_SERVER", search_solr_host)
-   
+
    gw = search_service.get_role_config_group("{0}-GATEWAY-BASE".format(search_service_name))
    gw.update_config(search_gw_config)
-   
+
    gateway = 0
    for host in search_gw_hosts:
       gateway += 1
       search_service.create_role("{0}-gw-".format(search_service_name) + str(gateway), "GATEWAY", host)
-      
+
    #solrctl init
-   zk_ensemble = ZOOKEEPER_HOSTS[0] + ":2181," + ZOOKEEPER_HOSTS[1] + ":2181," + ZOOKEEPER_HOSTS[2] + ":2181/solr" 
+   zk_ensemble = ZOOKEEPER_HOSTS[0] + ":2181," + ZOOKEEPER_HOSTS[1] + ":2181," + ZOOKEEPER_HOSTS[2] + ":2181/solr"
    shell_command = ["export SOLR_ZK_ENSEMBLE=" + zk_ensemble + "; solrctl init"]
    solrctl_init_output = Popen(shell_command, shell=True, stdin=PIPE, stdout=PIPE, stderr=STDOUT, close_fds=True).stdout.read()
-   
+
    return search_service
 
 
@@ -792,15 +792,15 @@ def deploy_search(cluster, search_service_name, search_service_config, search_so
 def deploy_flume(cluster, flume_service_name, flume_service_config, flume_agent_hosts, flume_agent_config):
    flume_service = cluster.create_service(flume_service_name, "FLUME")
    flume_service.update_config(flume_service_config)
-   
+
    gw = flume_service.get_role_config_group("{0}-AGENT-BASE".format(flume_service_name))
    gw.update_config(flume_agent_config)
-   
+
    agent = 0
    for host in flume_agent_hosts:
       agent += 1
       flume_service.create_role("{0}-agent-".format(flume_service_name) + str(agent), "AGENT", host)
-   
+
    return flume_service
 
 
@@ -809,13 +809,13 @@ def deploy_flume(cluster, flume_service_name, flume_service_config, flume_agent_
 def deploy_oozie(cluster, oozie_service_name, oozie_service_config, oozie_server_host, oozie_server_config):
    oozie_service = cluster.create_service(oozie_service_name, "OOZIE")
    oozie_service.update_config(oozie_service_config)
-   
+
    oozie_server = oozie_service.get_role_config_group("{0}-OOZIE_SERVER-BASE".format(oozie_service_name))
    oozie_server.update_config(oozie_server_config)
    oozie_service.create_role("{0}-server".format(oozie_service_name), "OOZIE_SERVER", oozie_server_host)
-   
+
    oozie_service.install_oozie_sharelib()
-   
+
    return oozie_service
 
 
@@ -823,11 +823,11 @@ def deploy_oozie(cluster, oozie_service_name, oozie_service_config, oozie_server
 def deploy_sqoop(cluster, sqoop_service_name, sqoop_service_config, sqoop_server_host, sqoop_server_config):
    sqoop_service = cluster.create_service(sqoop_service_name, "SQOOP")
    sqoop_service.update_config(sqoop_service_config)
-   
+
    oozie_server = sqoop_service.get_role_config_group("{0}-SQOOP_SERVER-BASE".format(sqoop_service_name))
    oozie_server.update_config(sqoop_server_config)
    sqoop_service.create_role("{0}-server".format(sqoop_service_name), "SQOOP_SERVER", sqoop_server_host)
-   
+
    return sqoop_service
 
 
@@ -835,15 +835,15 @@ def deploy_sqoop(cluster, sqoop_service_name, sqoop_service_config, sqoop_server
 def deploy_hue(cluster, hue_service_name, hue_service_config, hue_server_host, hue_server_config, hue_ktr_host, hue_ktr_config):
    hue_service = cluster.create_service(hue_service_name, "HUE")
    hue_service.update_config(hue_service_config)
-   
+
    hue_server = hue_service.get_role_config_group("{0}-HUE_SERVER-BASE".format(hue_service_name))
    hue_server.update_config(hue_server_config)
    hue_service.create_role("{0}-server".format(hue_service_name), "HUE_SERVER", hue_server_host)
-   
+
    #ktr = hue_service.get_role_config_group("{0}-KT_RENEWER-BASE".format(hue_service_name))
    #ktr.update_config(hue_ktr_config)
    #hue_service.create_role("{0}-ktr".format(hue_service_name), "KT_RENEWER", hue_ktr_host)
-   
+
    return hue_service
 
 
@@ -917,11 +917,11 @@ def deploy_accumulo(cluster, service_name, service_config, master_hosts, master_
 def post_startup(cluster, hdfs_service, oozie_service):
    # Create HDFS temp dir
    hdfs_service.create_hdfs_tmp()
-   
+
    # Create hive warehouse dir
    shell_command = ['curl -i -H "Content-Type: application/json" -X POST -u "' + ADMIN_USER + ':' + ADMIN_PASS + '" -d "serviceName=' + HIVE_SERVICE_NAME + ';clusterName=' + CLUSTER_NAME + '" http://' + CM_HOST + ':7180/api/v5/clusters/' + CLUSTER_NAME + '/services/' + HIVE_SERVICE_NAME + '/commands/hiveCreateHiveWarehouse']
    create_hive_warehouse_output = Popen(shell_command, shell=True, stdin=PIPE, stdout=PIPE, stderr=STDOUT, close_fds=True).stdout.read()
-   
+
    # Create oozie database
    oozie_service.stop().wait()
    shell_command = ['curl -i -H "Content-Type: application/json" -X POST -u "' + ADMIN_USER + ':' + ADMIN_PASS + '" -d "serviceName=' + OOZIE_SERVICE_NAME + ';clusterName=' + CLUSTER_NAME + '" http://' + CM_HOST + ':7180/api/v5/clusters/' + CLUSTER_NAME + '/services/' + OOZIE_SERVICE_NAME + '/commands/createOozieDb']
@@ -929,12 +929,12 @@ def post_startup(cluster, hdfs_service, oozie_service):
    # give the create db command time to complete
    time.sleep(30)
    oozie_service.start().wait()
-   
+
    # Deploy client configs to all necessary hosts
    cmd = cluster.deploy_client_config()
    if not cmd.wait(CMD_TIMEOUT).success:
       print "Failed to deploy client configs for {0}".format(cluster.name)
-   
+
    # Noe change permissions on the /user dir so YARN will work
    shell_command = ['sudo -u hdfs hadoop fs -chmod 775 /user']
    user_chmod_output = Popen(shell_command, shell=True, stdin=PIPE, stdout=PIPE, stderr=STDOUT, close_fds=True).stdout.read()
@@ -952,7 +952,7 @@ def main():
 
    deploy_management(MANAGER, MGMT_SERVICENAME, MGMT_SERVICE_CONFIG, MGMT_ROLE_CONFIG, AMON_ROLENAME, AMON_ROLE_CONFIG, APUB_ROLENAME, APUB_ROLE_CONFIG, ESERV_ROLENAME, ESERV_ROLE_CONFIG, HMON_ROLENAME, HMON_ROLE_CONFIG, SMON_ROLENAME, SMON_ROLE_CONFIG, NAV_ROLENAME, NAV_ROLE_CONFIG, NAVMS_ROLENAME, NAVMS_ROLE_CONFIG, RMAN_ROLENAME, RMAN_ROLE_CONFIG)
    print "Deployed CM management service " + MGMT_SERVICENAME + " to run on " + CM_HOST
-   
+
    deploy_parcels(CLUSTER, PARCELS)
    print "Downloaded and distributed parcels: "
    PRETTY_PRINT.pprint(PARCELS)
@@ -960,7 +960,7 @@ def main():
    zookeeper_service = deploy_zookeeper(CLUSTER, ZOOKEEPER_SERVICE_NAME, ZOOKEEPER_HOSTS, ZOOKEEPER_SERVICE_CONFIG, ZOOKEEPER_ROLE_CONFIG)
    print "Deployed ZooKeeper " + ZOOKEEPER_SERVICE_NAME + " to run on: "
    PRETTY_PRINT.pprint(ZOOKEEPER_HOSTS)
-   
+
    hdfs_service = deploy_hdfs(CLUSTER, HDFS_SERVICE_NAME, HDFS_SERVICE_CONFIG, HDFS_NAMENODE_SERVICE_NAME, HDFS_NAMENODE_HOST, HDFS_NAMENODE_CONFIG, HDFS_SECONDARY_NAMENODE_HOST, HDFS_SECONDARY_NAMENODE_CONFIG, HDFS_DATANODE_HOSTS, HDFS_DATANODE_CONFIG, HDFS_GATEWAY_HOSTS, HDFS_GATEWAY_CONFIG)
    print "Deployed HDFS service " + HDFS_SERVICE_NAME + " using NameNode on " + HDFS_NAMENODE_HOST + ", SecondaryNameNode on " + HDFS_SECONDARY_NAMENODE_HOST + ", and DataNodes running on: "
    PRETTY_PRINT.pprint(HDFS_DATANODE_HOSTS)
@@ -971,28 +971,28 @@ def main():
    #mapred_service = deploy_mapreduce(CLUSTER, MAPRED_SERVICE_NAME, MAPRED_SERVICE_CONFIG, MAPRED_JT_HOST, MAPRED_JT_CONFIG, MAPRED_TT_HOSTS, MAPRED_TT_CONFIG, MAPRED_GW_HOSTS, MAPRED_GW_CONFIG)
    print "Deployed MapReduce service " + MAPRED_SERVICE_NAME + " using JobTracker on " + MAPRED_JT_HOST + " and TaskTrackers running on "
    PRETTY_PRINT.pprint(MAPRED_TT_HOSTS)
-   
+
    yarn_service = deploy_yarn(CLUSTER, YARN_SERVICE_NAME, YARN_SERVICE_CONFIG, YARN_RM_HOST, YARN_RM_CONFIG, YARN_JHS_HOST, YARN_JHS_CONFIG, YARN_NM_HOSTS, YARN_NM_CONFIG, YARN_GW_HOSTS, YARN_GW_CONFIG)
    print "Deployed YARN service " + YARN_SERVICE_NAME + " using ResourceManager on " + YARN_RM_HOST + ", JobHistoryServer on " + YARN_JHS_HOST + ", and NodeManagers on "
    PRETTY_PRINT.pprint(YARN_NM_HOSTS)
-   
+
    spark_service = deploy_spark(CLUSTER, SPARK_SERVICE_NAME, SPARK_SERVICE_CONFIG, SPARK_MASTER_HOST, SPARK_MASTER_CONFIG, SPARK_WORKER_HOSTS, SPARK_WORKER_CONFIG, SPARK_GW_HOSTS, SPARK_GW_CONFIG)
    print "Deployed SPARK service " + SPARK_SERVICE_NAME + " using SparkMaster on " + SPARK_MASTER_HOST + " and SparkWorkers on "
    PRETTY_PRINT.pprint(SPARK_WORKER_HOSTS)
-   
+
    deploy_hbase(CLUSTER, HBASE_SERVICE_NAME, HBASE_SERVICE_CONFIG, HBASE_HM_HOST, HBASE_HM_CONFIG, HBASE_RS_HOSTS, HBASE_RS_CONFIG, HBASE_THRIFTSERVER_SERVICE_NAME, HBASE_THRIFTSERVER_HOST, HBASE_THRIFTSERVER_CONFIG, HBASE_GW_HOSTS, HBASE_GW_CONFIG)
    print "Deployed HBase service " + HBASE_SERVICE_NAME + " using HMaster on " + HBASE_HM_HOST + " and RegionServers on "
    PRETTY_PRINT.pprint(HBASE_RS_HOSTS)
-   
+
    hive_service = deploy_hive(CLUSTER, HIVE_SERVICE_NAME, HIVE_SERVICE_CONFIG, HIVE_HMS_HOST, HIVE_HMS_CONFIG, HIVE_HS2_HOST, HIVE_HS2_CONFIG, HIVE_WHC_HOST, HIVE_WHC_CONFIG, HIVE_GW_HOSTS, HIVE_GW_CONFIG)
    print "Depoyed Hive service " + HIVE_SERVICE_NAME + " using HiveMetastoreServer on " + HIVE_HMS_HOST + " and HiveServer2 on " + HIVE_HS2_HOST
    init_hive(hive_service)
    print "Initialized Hive service"
-   
+
    impala_service = deploy_impala(CLUSTER, IMPALA_SERVICE_NAME, IMPALA_SERVICE_CONFIG, IMPALA_SS_HOST, IMPALA_SS_CONFIG, IMPALA_CS_HOST, IMPALA_CS_CONFIG, IMPALA_ID_HOSTS, IMPALA_ID_CONFIG)
    print "Deployed Impala service " + IMPALA_SERVICE_NAME + " using StateStore on " + IMPALA_SS_HOST + ", CatalogServer on " + IMPALA_CS_HOST + ", and ImpalaDaemons on "
    PRETTY_PRINT.pprint(IMPALA_ID_HOSTS)
-   
+
    #Need to start the cluster now as subsequent services need the cluster to be runnign
    #TODO can we just start ZK, and maybe HDFS, instead of everything? It's just needed for the search service
    print "About to restart cluster"
@@ -1002,33 +1002,33 @@ def main():
 
    search_service = deploy_search(CLUSTER, SEARCH_SERVICE_NAME, SEARCH_SERVICE_CONFIG, SEARCH_SOLR_HOST, SEARCH_SOLR_CONFIG, SEARCH_GW_HOSTS, SEARCH_GW_CONFIG)
    print "Deployed Search service " + SEARCH_SERVICE_NAME + " using SOLRHost " + SEARCH_SOLR_HOST
-   
+
    flume_service = deploy_flume(CLUSTER, FLUME_SERVICE_NAME, FLUME_SERVICE_CONFIG, FLUME_AGENT_HOSTS, FLUME_AGENT_CONFIG)
    print "Deployed Flume service " + FLUME_SERVICE_NAME + " using FlumeAgents on "
    PRETTY_PRINT.pprint(FLUME_AGENT_HOSTS)
-   
+
    oozie_service = deploy_oozie(CLUSTER, OOZIE_SERVICE_NAME, OOZIE_SERVICE_CONFIG, OOZIE_SERVER_HOST, OOZIE_SERVER_CONFIG)
    print "Deployed Oozie service " + OOZIE_SERVICE_NAME + " using OozieServer on " + OOZIE_SERVER_HOST
-   
+
    sqoop_service = deploy_sqoop(CLUSTER, SQOOP_SERVICE_NAME, SQOOP_SERVICE_CONFIG, SQOOP_SERVER_HOST, SQOOP_SERVER_CONFIG)
    print "Deployed Sqoop service " + SQOOP_SERVICE_NAME + " using SqoopServer on " + SQOOP_SERVER_HOST
-   
+
    hue_service = deploy_hue(CLUSTER, HUE_SERVICE_NAME, HUE_SERVICE_CONFIG, HUE_SERVER_HOST, HUE_SERVER_CONFIG, HUE_KTR_HOST, HUE_KTR_CONFIG)
    print "Deployed HUE service " + HUE_SERVICE_NAME + " using HueServer on " + HUE_SERVER_HOST
-   
+
    #deploy_accumulo(CLUSTER, ACCUMULO_SERVICE_NAME, ACCUMULO_SERVICE_CONFIG, ACCUMULO_MASTER_HOSTS, ACCUMULO_MASTER_CONFIG, ACCUMULO_TRACER_HOSTS, ACCUMULO_TRACER_CONFIG, ACCUMULO_TSERVER_HOSTS, ACCUMULO_TSERVER_CONFIG, ACCUMULO_LOGGER_HOSTS, ACCUMULO_LOGGER_CONFIG, ACCUMULO_MONITOR_HOST, ACCUMULO_MONITOR_CONFIG, ACCUMULO_GC_HOST, ACCUMULO_GC_CONFIG, ACCUMULO_GATEWAY_HOSTS, ACCUMULO_GATEWAY_CONFIG)
-   
+
    print "About to restart cluster."
    CLUSTER.stop().wait()
    CLUSTER.start().wait()
    print "Done restarting cluster."
-   
+
    post_startup(CLUSTER, hdfs_service, oozie_service)
 
    print "Finished deploying Cloudera cluster. Go to http://" + CM_HOST + ":7180 to administer the cluster."
    print "If the Oozie service (and therefore the HUE service as well, which depends on it) did not start properly, go to the Oozie service, stop it, click on the Actions button and choose 'Create Database', then start it."
    print "If there are any other services not running, restart them now."
-   
-   
+
+
 if __name__ == "__main__":
    main()
