@@ -28,7 +28,7 @@ sudo ntpdate $ntp_server
 sudo /etc/init.d/ntpd start
 
 # Set up python
-sudo rpm -ivh http://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-5.noarch.rpm
+sudo rpm -ivh rpm -ivh http://dl.fedoraproject.org/pub/epel/6/i386/epel-release-6-8.noarch.rpm
 #http://dl.fedoraproject.org/pub/epel/6/i386/epel-release-6-8.noarch.rpm
 sudo yum -y install python-pip
 sudo pip install cm_api
