@@ -65,7 +65,7 @@ headlampdbpassword=`grep com.cloudera.cmf.REPORTSMANAGER.db.password /etc/cloude
 
 # Sleep for a while to give the agents enough time to check in with the master.
 # Or better yet, make a dependency so that the slave setup scripts don't start until now and the rest of this script doesn't finish until the slaves finish.
-sleep_time=100
+sleep_time=240
 echo "Sleeping for $sleep_time seconds so managed cluster nodes can get set up."
 sleep $sleep_time
 echo "Done sleeping. Deploying cluster now."
