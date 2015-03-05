@@ -37,9 +37,5 @@ sudo yum -y install cloudera-manager-agent cloudera-manager-daemons
 sudo sed -i.bak -e"s%server_host=localhost%server_host=$cm_server_host%" /etc/cloudera-scm-agent/config.ini
 
 # Sleep a while so the CM server can come up
-sleep_time=120
-echo "Sleeping for $sleep_time seconds so CM server can start up."
-sleep $sleep_time
-echo "Done sleeping. Starting CM agent now."
 
 sudo service cloudera-scm-agent start
