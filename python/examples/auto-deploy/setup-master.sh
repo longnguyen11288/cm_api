@@ -28,13 +28,14 @@ sudo ntpdate $ntp_server
 sudo /etc/init.d/ntpd start
 
 # Set up python
-sudo rpm -ivh http://dl.fedoraproject.org/pub/epel/6/i386/epel-release-6-8.noarch.rpm
+sudo rpm -ivh http://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-5.noarch.rpm
+#http://dl.fedoraproject.org/pub/epel/6/i386/epel-release-6-8.noarch.rpm
 sudo yum -y install python-pip
 sudo pip install cm_api
 
 # Set up MySQL
-wget http://archive.cloudera.com/cdh5/cdh/5/hive-0.12.0-cdh5.0.0.tar.gz
-tar zxf hive-0.12.0-cdh5.0.0.tar.gz
+wget http://archive.cloudera.com/cdh5/cdh/5/hive-0.13.1-cdh5.3.2.tar.gz
+tar zxf hive-0.13.1-cdh5.3.2.tar.gz
 sudo yum -y install mysql-server expect
 sudo service mysqld start
 sudo /sbin/chkconfig mysqld on
@@ -64,7 +65,7 @@ headlampdbpassword=`grep com.cloudera.cmf.REPORTSMANAGER.db.password /etc/cloude
 
 # Sleep for a while to give the agents enough time to check in with the master.
 # Or better yet, make a dependency so that the slave setup scripts don't start until now and the rest of this script doesn't finish until the slaves finish.
-sleep_time=180
+sleep_time=300
 echo "Sleeping for $sleep_time seconds so managed cluster nodes can get set up."
 sleep $sleep_time
 echo "Done sleeping. Deploying cluster now."
